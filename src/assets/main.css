@@ -1,0 +1,12 @@
+html, body {
+    position: relative;
+    display: block;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#app {
+    position: relative;
+    height: 100%;
+}
