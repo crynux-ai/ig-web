@@ -5,6 +5,7 @@ import {useTaskStore} from "@/stores/task";
 import InferenceRunner from "@/components/inference/InferenceRunner.vue";
 import ModelSelector from "@/components/inference/ModelSelector.vue";
 import ModelTag from "@/components/inference/ModelTag.vue";
+import {BaseModelType} from "@/models/base_model";
 
 const taskStore = useTaskStore();
 
@@ -36,11 +37,13 @@ const updateImage = (imageNum, imageDataURL) => {
 const imagePreviewVisible = ref(false);
 
 const selectedBaseModel = ref('runwayml/stable-diffusion-v1-5');
+const selectedBaseModelType = ref(BaseModelType.SD15);
 const selectedLoraModel = ref('');
-const modelSelected = (modelType, modelName) => {
-    if(modelType === 'base') {
+const modelSelected = (modelCategory, modelName, modelType) => {
+    if(modelCategory === 'base') {
         taskStore.inference_task.task_args.base_model = modelName;
         selectedBaseModel.value = modelName;
+        selectedBaseModelType.value = modelType;
     } else {
         taskStore.inference_task.task_args.lora.model = modelName;
         selectedLoraModel.value = modelName;
@@ -49,6 +52,7 @@ const modelSelected = (modelType, modelName) => {
 const modelDeselected = (modelType) => {
     if(modelType === 'base') {
         selectedBaseModel.value = '';
+        selectedBaseModelType.value = '';
         taskStore.inference_task.task_args.base_model = '';
     } else {
         taskStore.inference_task.task_args.lora.model = '';
@@ -156,6 +160,7 @@ const promptTabActiveKey = ref('positive');
                 <inference-runner
                     :pose="selectedPose"
                     :base-model="selectedBaseModel"
+                    :base-model-type="selectedBaseModelType"
                     :lora-model="selectedLoraModel"
                     @image="updateImage"
                     @task-started="clearImage">

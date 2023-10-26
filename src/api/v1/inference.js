@@ -4,17 +4,6 @@ import v1 from "./v1";
 class InferenceAPI extends BaseAPI {
 
     createTask(clientId, taskArgs) {
-
-        if (taskArgs.controlnet) {
-            taskArgs.controlnet.weight = Math.round(taskArgs.controlnet.weight_d100 * 100)
-        }
-
-        if (taskArgs.lora) {
-            taskArgs.lora.weight = Math.round(taskArgs.lora.weight_d100 * 100)
-        }
-
-        taskArgs.task_config.seed = Math.round(Math.random() * 100000000)
-
         return v1.post("/inference_tasks", {
             'client_id': clientId,
             'task_args': JSON.stringify(taskArgs)

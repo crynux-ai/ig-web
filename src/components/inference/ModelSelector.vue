@@ -61,7 +61,7 @@ const selectBaseModel = (rowIndex, colIndex) => {
         deselectModel('lora');
     }
 
-    emit('modelSelected', 'base', selectedBaseModel.value);
+    emit('modelSelected', 'base', selectedBaseModel.value, selectedBaseModelType.value);
 };
 const selectLoRAModel = (rowIndex, colIndex) => {
     useCustomLoRAModel.value = false;

@@ -14,7 +14,7 @@ export const useTaskStore = defineStore('task', {
                     weight_d100: 0.8
                 },
                 controlnet: {
-                    model: 'openpose_full',
+                    model: 'lllyasviel/control_v11p_sd15_openpose',
                     weight: 80,
                     weight_d100: 0.8,
                     image_dataurl: ''

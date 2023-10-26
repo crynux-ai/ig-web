@@ -7,8 +7,9 @@ import {useClientStore} from "@/stores/client";
 import {InferenceTaskStatus} from "@/models/inference_task";
 import config from "@/config.json";
 import {message} from "ant-design-vue";
+import {BaseModelType} from "@/models/base_model";
 
-const props = defineProps(["pose", "baseModel", "loraModel"]);
+const props = defineProps(["pose", "baseModel", "baseModelType", "loraModel"]);
 const emit = defineEmits(["image", "taskStarted"]);
 const taskStore = useTaskStore();
 const clientStore = useClientStore();
@@ -51,13 +52,28 @@ const run = async () => {
 
         poseDataURL = await inferenceAPI.getImageAsDataURL(poseImageUrl);
         taskArgs.controlnet.image_dataurl = poseDataURL;
+
+        if (props.baseModelType === BaseModelType.SD15) {
+            taskArgs.controlnet.model = "lllyasviel/control_v11p_sd15_openpose";
+        } else if(props.baseModelType === BaseModelType.SDXL) {
+            taskArgs.controlnet.model = "thibaud/controlnet-openpose-sdxl-1.0";
+        }
+
+        taskArgs.controlnet.weight = Math.round(taskArgs.controlnet.weight_d100 * 100)
+
     } else {
         taskArgs.controlnet = null;
     }
 
     if (taskArgs.lora.model === "") {
         taskArgs.lora = null;
+    } else {
+        taskArgs.lora.weight = Math.round(taskArgs.lora.weight_d100 * 100)
     }
+
+    taskArgs.task_config.seed = Math.round(Math.random() * 100000000)
+
+    console.log(taskArgs);
 
     try {
         const res = await inferenceAPI.createTask(
