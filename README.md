@@ -21,3 +21,37 @@ The only place where we can find something different about the architecture.
 ### Text-to-Image generation
 Generation images using text prompt. Supports LoRA and Controlnet.
 ![text-to-image](./docs/text-to-image.png)
+
+
+
+## Development
+
+### Configuration
+
+The config file is located at:
+
+```
+./src/config.json
+```
+
+Where you could change the backend server address, and tweak other options.
+
+### Install the dependencies
+
+```shell
+$ yarn install
+```
+
+### Start dev server
+
+The project could be built using yarn:
+
+```shell
+$ yarn dev
+```
+
+### Build release package
+
+```shell
+$ yarn build
+```
