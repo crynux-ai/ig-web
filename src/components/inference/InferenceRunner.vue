@@ -20,12 +20,16 @@ let traceTaskRunningStatusInterval = null;
 const task = reactive({});
 const latestTaskStatus = ref(0);
 
+const manuallyShownModal = ref(false);
+
 const showModal = async () => {
+    manuallyShownModal.value = true;
     modalVisible.value = true
 }
 
 const hideModal = () => {
     modalVisible.value = false;
+    manuallyShownModal.value = false;
 
     if (traceTaskRunningStatusInterval) {
         clearInterval(traceTaskRunningStatusInterval);
@@ -64,7 +68,7 @@ const run = async () => {
         taskStore.inference_task.task_id = res.id;
         emit('taskStarted');
 
-        await showModal();
+        modalVisible.value = true;
         await updateTaskStatus();
     } catch (e) {
         isRunning.value = false;
@@ -93,6 +97,8 @@ const fetchTaskStatus = async () => {
 
     Object.assign(task, newTask);
 
+    latestTaskStatus.value = task.status;
+
     if (task.status === InferenceTaskStatus.Success || task.status === InferenceTaskStatus.Aborted) {
         clearInterval(traceTaskRunningStatusInterval)
         traceTaskRunningStatusInterval = null;
@@ -100,12 +106,14 @@ const fetchTaskStatus = async () => {
 
         if(task.status === InferenceTaskStatus.Success) {
             await downloadImages();
-            hideModal();
+
+            if (!manuallyShownModal.value) {
+                hideModal();
+            }
         }
 
-        taskStore.clearInferenceTask();
-    } else {
-        latestTaskStatus.value = task.status;
+        // Let's just keep it so the user can still find the image after page refresh...
+        // taskStore.clearInferenceTask();
     }
 };
 
@@ -226,7 +234,10 @@ onBeforeUnmount(() => {
                     </a-timeline-item>
                     <a-timeline-item color="red" v-if="task.id && task.status === InferenceTaskStatus.Aborted">
                         <template #dot><close-circle-outlined style="font-size: 16px" /></template>
-                        There is something wrong. Please try again later.
+                        <div>There is something wrong. Please try again later.</div>
+                        <a-typography-paragraph>
+                            <pre>{{ task.abort_reason }}</pre>
+                        </a-typography-paragraph>
                     </a-timeline-item>
 
                     <a-timeline-item color="green" v-if="task.id && task.status === InferenceTaskStatus.Success">

@@ -3,7 +3,6 @@
     "description": "Generate Stable Diffusion images using Crynux Network",
     "version": "0.1.0",
     "author": "lukew@crynux.ai",
-    "private": false,
     "main": "main.js",
     "scripts": {
         "dev": "vite",
