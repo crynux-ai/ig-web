@@ -20,8 +20,8 @@ export const useTaskStore = defineStore('task', {
                     image_dataurl: ''
                 },
                 task_config: {
-                    image_width: 768,
-                    image_height: 1024,
+                    image_width: 512,
+                    image_height: 512,
                     steps: 40,
                     num_images: 6,
                     seed: 0,
