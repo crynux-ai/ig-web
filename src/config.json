@@ -1,5 +1,5 @@
 {
-    "base_url": "http://127.0.0.1:5028",
+    "base_url": "https://api_ig.crynux.ai",
     "reference_poses": {
         "dance": 5,
         "flexing": 3,
@@ -8,5 +8,6 @@
         "sitting": 9,
         "standing": 19,
         "others": 3
-    }
+    },
+    "block_explorer": "https://block-explorer.crynux.ai"
 }

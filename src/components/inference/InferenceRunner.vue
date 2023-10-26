@@ -97,8 +97,6 @@ const fetchTaskStatus = async () => {
 
     Object.assign(task, newTask);
 
-    latestTaskStatus.value = task.status;
-
     if (task.status === InferenceTaskStatus.Success || task.status === InferenceTaskStatus.Aborted) {
         clearInterval(traceTaskRunningStatusInterval)
         traceTaskRunningStatusInterval = null;
@@ -114,6 +112,8 @@ const fetchTaskStatus = async () => {
 
         // Let's just keep it so the user can still find the image after page refresh...
         // taskStore.clearInferenceTask();
+    } else {
+        latestTaskStatus.value = task.status;
     }
 };
 
