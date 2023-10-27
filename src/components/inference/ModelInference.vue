@@ -1,11 +1,10 @@
 <script setup>
-import {reactive, ref} from 'vue'
+import {ref} from 'vue'
 import config from '../../config.json'
 import {useTaskStore} from "@/stores/task";
 import InferenceRunner from "@/components/inference/InferenceRunner.vue";
 import ModelSelector from "@/components/inference/ModelSelector.vue";
 import ModelTag from "@/components/inference/ModelTag.vue";
-import {BaseModelType} from "@/models/base_model";
 
 const taskStore = useTaskStore();
 
@@ -13,17 +12,20 @@ const referencePoses = config.reference_poses;
 const generatedImages = ref([]);
 
 const referencePosesActiveKey = ref(['sitting']);
-const selectedPose = reactive({category: '', index: ''});
+
+if (taskStore.inference_task.pose.category !== "") {
+    referencePosesActiveKey.value = taskStore.inference_task.pose.category;
+}
+
 const selectPose = (category, index) => {
 
-    if (selectedPose.category === category && selectedPose.index === index) {
-        selectedPose.category = '';
-        selectedPose.index = '';
-        taskStore.inference_task.task_args.controlnet.image_dataurl = '';
+    if (taskStore.inference_task.pose.category === category && taskStore.inference_task.pose.index === index) {
+        // Deselect action
+        taskStore.inference_task.pose.category = '';
+        taskStore.inference_task.pose.index = -1;
     } else {
-        taskStore.inference_task.task_args.controlnet.image_dataurl = category + index;
-        selectedPose.category = category;
-        selectedPose.index = index;
+        taskStore.inference_task.pose.category = category;
+        taskStore.inference_task.pose.index = index;
     }
 };
 
@@ -35,31 +37,6 @@ const updateImage = (imageNum, imageDataURL) => {
 };
 
 const imagePreviewVisible = ref(false);
-
-const selectedBaseModel = ref('runwayml/stable-diffusion-v1-5');
-const selectedBaseModelType = ref(BaseModelType.SD15);
-const selectedLoraModel = ref('');
-const modelSelected = (modelCategory, modelName, modelType) => {
-    if(modelCategory === 'base') {
-        taskStore.inference_task.task_args.base_model = modelName;
-        selectedBaseModel.value = modelName;
-        selectedBaseModelType.value = modelType;
-    } else {
-        taskStore.inference_task.task_args.lora.model = modelName;
-        selectedLoraModel.value = modelName;
-    }
-};
-const modelDeselected = (modelType) => {
-    if(modelType === 'base') {
-        selectedBaseModel.value = '';
-        selectedBaseModelType.value = '';
-        taskStore.inference_task.task_args.base_model = '';
-    } else {
-        taskStore.inference_task.task_args.lora.model = '';
-        selectedLoraModel.value = '';
-    }
-};
-
 const promptTabActiveKey = ref('positive');
 </script>
 
@@ -81,10 +58,10 @@ const promptTabActiveKey = ref('positive');
                     <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.steps" placeholder="Steps" min="20" max="100" />
                 </a-form-item>
                 <a-form-item label="Lora weight" name="weight">
-                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.lora.weight_d100" placeholder="Weight" min="0.1" max="1" :disabled="taskStore.inference_task.task_args.lora.model===''" />
+                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.lora.weight" placeholder="Weight" min="0.1" max="1" :disabled="taskStore.inference_task.task_args.lora.model==='' && taskStore.inference_task.custom_civitai_id===''" />
                 </a-form-item>
                 <a-form-item label="Pose weight" name="pose-weight">
-                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.controlnet.weight_d100" placeholder="Pose weight" min="0.1" max="1" :disabled="taskStore.inference_task.task_args.controlnet.image_dataurl===''" />
+                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.controlnet.weight" placeholder="Pose weight" min="0.1" max="1" :disabled="taskStore.inference_task.pose.category===''" />
                 </a-form-item>
                 <a-form-item label="Num images" name="num-images">
                     <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.num_images" placeholder="Num images" min="1" max="9" />
@@ -102,7 +79,7 @@ const promptTabActiveKey = ref('positive');
                     v-for="poseCategory in Object.keys(referencePoses)"
                 >
                     <div class="pose-image" v-for="i in referencePoses[poseCategory]"
-                         :class="{'selected': selectedPose.category === poseCategory && selectedPose.index === i}"
+                         :class="{'selected': taskStore.inference_task.pose.category === poseCategory && taskStore.inference_task.pose.index === i}"
                          @click="selectPose(poseCategory, i)">
                         <img
                             :src="'./poses/' + poseCategory + '/' + poseCategory + '_' + String(i).padStart(2, '0') + '.png'"/>
@@ -131,13 +108,10 @@ const promptTabActiveKey = ref('positive');
             <div class="overview">
                 <div class="name">Model Selection</div>
                 <div class="select-model">
-                    <model-selector @model-selected="modelSelected" @model-deselected="modelDeselected"></model-selector>
+                    <model-selector></model-selector>
                 </div>
                 <div class="model-details">
-                    <model-tag :closable="false"
-                           :base-model-name="selectedBaseModel"
-                           :lora-model-name="selectedLoraModel"
-                ></model-tag>
+                    <model-tag :closable="false"></model-tag>
                 </div>
             </div>
             <div class="prompt">
@@ -154,14 +128,9 @@ const promptTabActiveKey = ref('positive');
                         <a-textarea v-model:value="taskStore.inference_task.task_args.negative_prompt" placeholder="lowres, bad anatomy, bad hands, missing fingers, worst quality, ..." />
                     </a-tab-pane>
                 </a-tabs>
-
             </div>
             <div class="start-generating">
                 <inference-runner
-                    :pose="selectedPose"
-                    :base-model="selectedBaseModel"
-                    :base-model-type="selectedBaseModelType"
-                    :lora-model="selectedLoraModel"
                     @image="updateImage"
                     @task-started="clearImage">
                 </inference-runner>

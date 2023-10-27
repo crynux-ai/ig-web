@@ -4,4 +4,10 @@ const BaseModelType = {
     SDXL: 'sd_xl'
 }
 
-export {BaseModelType}
+const BaseModelTypeDisplayNames = {
+    "sd_1_5": "SD1.5",
+    "sd_2_1": "SD2.1",
+    "sd_xl": "SDXL"
+}
+
+export {BaseModelType, BaseModelTypeDisplayNames}

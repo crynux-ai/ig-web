@@ -7,9 +7,7 @@ import {useClientStore} from "@/stores/client";
 import {InferenceTaskStatus} from "@/models/inference_task";
 import config from "@/config.json";
 import {message} from "ant-design-vue";
-import {BaseModelType} from "@/models/base_model";
 
-const props = defineProps(["pose", "baseModel", "baseModelType", "loraModel"]);
 const emit = defineEmits(["image", "taskStarted"]);
 const taskStore = useTaskStore();
 const clientStore = useClientStore();
@@ -42,43 +40,10 @@ const run = async () => {
     isRunning.value = true;
     latestTaskStatus.value = 0;
 
-    let poseDataURL = "";
-
-    let taskArgs = JSON.parse(JSON.stringify(taskStore.inference_task.task_args))
-
-    if (props.pose.category !== "" && props.pose.index !== "") {
-        const poseImageUrl = "/poses/" + props.pose.category + "/"
-            + props.pose.category + "_" + String(props.pose.index).padStart(2, '0') + '.png';
-
-        poseDataURL = await inferenceAPI.getImageAsDataURL(poseImageUrl);
-        taskArgs.controlnet.image_dataurl = poseDataURL;
-
-        if (props.baseModelType === BaseModelType.SD15) {
-            taskArgs.controlnet.model = "lllyasviel/control_v11p_sd15_openpose";
-        } else if(props.baseModelType === BaseModelType.SDXL) {
-            taskArgs.controlnet.model = "thibaud/controlnet-openpose-sdxl-1.0";
-        }
-
-        taskArgs.controlnet.weight = Math.round(taskArgs.controlnet.weight_d100 * 100)
-
-    } else {
-        taskArgs.controlnet = null;
-    }
-
-    if (taskArgs.lora.model === "") {
-        taskArgs.lora = null;
-    } else {
-        taskArgs.lora.weight = Math.round(taskArgs.lora.weight_d100 * 100)
-    }
-
-    taskArgs.task_config.seed = Math.round(Math.random() * 100000000)
-
-    console.log(taskArgs);
-
     try {
         const res = await inferenceAPI.createTask(
             clientStore.client_id,
-            taskArgs
+            taskStore.taskArgsJson
         );
     
         taskStore.inference_task.task_id = res.id;
@@ -95,7 +60,7 @@ const run = async () => {
 };
 
 const notReadyToRun = computed(() => {
-    return props.baseModel.value === ''
+    return taskStore.inference_task.task_args.base_model === ''
         || taskStore.inference_task.task_args.prompt === "";
 });
 
@@ -258,9 +223,8 @@ onBeforeUnmount(() => {
 
                     <a-timeline-item color="green" v-if="task.id && task.status === InferenceTaskStatus.Success">
                         <template #dot><check-circle-outlined style="font-size: 16px" /></template>
-                        The task is successfully finished.
+                        The task has finished successfully.
                     </a-timeline-item>
-
                 </a-timeline>
             </div>
         </a-space>

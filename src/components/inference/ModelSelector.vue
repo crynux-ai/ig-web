@@ -1,20 +1,16 @@
 <script setup>
 import { RadarChartOutlined } from "@ant-design/icons-vue";
-import {computed, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import ModelTag from "@/components/inference/ModelTag.vue";
 import modelAPI from "@/api/v1/model";
 import v1 from "@/api/v1/v1";
+import {useTaskStore} from "@/stores/task";
+import {BaseModelTypeDisplayNames} from "@/models/base_model";
 
-const emit = defineEmits(['modelSelected', 'modelDeselected']);
+const taskStore = useTaskStore();
 
 const modalVisible = ref(false);
 const activeModelTabKey = ref('base');
-
-const selectedBaseModel = ref('runwayml/stable-diffusion-v1-5');
-const selectedBaseModelType = ref('sd_1_5');
-const selectedLoRAModel = ref('');
-const customLoRAModelLink = ref('');
-const useCustomLoRAModel = ref(false);
 
 const baseModels = ref([]);
 const loraModels = ref([]);
@@ -30,11 +26,12 @@ const hideModal = () => {
 
 const loadModels = async () => {
     baseModels.value = await modelAPI.getBaseModels();
+    loraModels.value = await modelAPI.getLoraModels(taskStore.inference_task.base_model_type);
 };
 
-watch(activeModelTabKey, async (newKeyValue) => {
-    if (newKeyValue === 'lora') {
-        loraModels.value = await modelAPI.getLoraModels(selectedBaseModelType.value);
+watch(() => taskStore.inference_task.base_model_type, async (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        loraModels.value = await modelAPI.getLoraModels(taskStore.inference_task.base_model_type);
     }
 });
 
@@ -51,75 +48,17 @@ const getElementIndexByRowAndCol = (rowIndex, colIndex) => {
 };
 
 const selectBaseModel = (rowIndex, colIndex) => {
-
     const elemIdx = getElementIndexByRowAndCol(rowIndex, colIndex)
 
-    selectedBaseModel.value = baseModels.value[elemIdx].key;
-
-    if(selectedBaseModelType.value !== baseModels.value[elemIdx].type) {
-        selectedBaseModelType.value = baseModels.value[elemIdx].type;
-        deselectModel('lora');
-    }
-
-    emit('modelSelected', 'base', selectedBaseModel.value, selectedBaseModelType.value);
+    taskStore.inference_task.task_args.base_model = baseModels.value[elemIdx].key;
+    taskStore.changeBaseModel(baseModels.value[elemIdx].key, baseModels.value[elemIdx].type)
 };
 const selectLoRAModel = (rowIndex, colIndex) => {
-    useCustomLoRAModel.value = false;
-    selectedLoRAModel.value = loraModels.value[getElementIndexByRowAndCol(rowIndex, colIndex)].download_link;
+    taskStore.inference_task.custom_civitai_id = '';
+    taskStore.inference_task.task_args.lora.model = loraModels.value[getElementIndexByRowAndCol(rowIndex, colIndex)].download_link;
 };
-
-const deselectModel = (modelType) => {
-    if(modelType === "base") {
-        selectedBaseModel.value = "";
-        emit('modelDeselected', 'base');
-    } else {
-        if(useCustomLoRAModel.value) {
-            customLoRAModelLink.value = "";
-        } else {
-            selectedLoRAModel.value = "";
-        }
-    }
-};
-const selectCustomLoRAModel = () => {
-    useCustomLoRAModel.value = true;
-};
-
-const finalSelectedLoraModel = computed(() => {
-    if (!useCustomLoRAModel.value) {
-        if (selectedLoRAModel.value !== "") {
-            return selectedLoRAModel.value;
-        } else {
-            return '';
-        }
-    } else {
-        if (customLoRAModelLink.value === "") {
-            return '';
-        } else {
-            if (/^[0-9]{5,}$/.test(customLoRAModelLink.value)) {
-                return 'https://civitai.com/api/download/models/' + customLoRAModelLink.value;
-            } else {
-                return "";
-            }
-        }
-    }
-});
-
-watch(finalSelectedLoraModel, () => {
-    if(finalSelectedLoraModel.value === "") {
-        emit('modelDeselected', 'lora');
-    } else {
-        emit('modelSelected', 'lora', finalSelectedLoraModel.value);
-    }
-});
 
 const baseURL = v1.getBaseURL();
-
-const modelTypeDisplayNames = {
-    "sd_1_5": "SD1.5",
-    "sd_2_1": "SD2.1",
-    "sd_xl": "SDXL"
-}
-
 </script>
 
 <template>
@@ -149,7 +88,7 @@ const modelTypeDisplayNames = {
             <a-row v-for="rowIndex in Math.ceil(baseModels.length / modelListElementPerRow)">
                 <a-col v-for="colIndex in getElementNumForRow(rowIndex, baseModels)" :span="24 / modelListElementPerRow">
                     <a-card
-                        :class="{'model-card':true,'selected':baseModels[getElementIndexByRowAndCol(rowIndex, colIndex)].key === selectedBaseModel}" hoverable size="small"
+                        :class="{'model-card':true,'selected':baseModels[getElementIndexByRowAndCol(rowIndex, colIndex)].key === taskStore.inference_task.task_args.base_model}" hoverable size="small"
                         style="width: 90%; margin:0 auto 16px"
                         @click="selectBaseModel(rowIndex, colIndex)"
                     >
@@ -165,7 +104,7 @@ const modelTypeDisplayNames = {
                                     {{ baseModels[getElementIndexByRowAndCol(rowIndex, colIndex)].description }}
                                 </div>
                                 <div>
-                                    <a-tag color="cyan">{{ modelTypeDisplayNames[baseModels[getElementIndexByRowAndCol(rowIndex, colIndex)].type] }}</a-tag>
+                                    <a-tag color="cyan">{{ BaseModelTypeDisplayNames[baseModels[getElementIndexByRowAndCol(rowIndex, colIndex)].type] }}</a-tag>
                                 </div>
                             </template>
                         </a-card-meta>
@@ -177,7 +116,7 @@ const modelTypeDisplayNames = {
             <a-row v-for="rowIndex in Math.ceil(loraModels.length / modelListElementPerRow)">
                 <a-col v-for="colIndex in getElementNumForRow(rowIndex, loraModels)" :span="24 / modelListElementPerRow">
                     <a-card
-                        :class="{'model-card':true,'selected':loraModels[getElementIndexByRowAndCol(rowIndex, colIndex)].download_link === selectedLoRAModel && !useCustomLoRAModel}" hoverable size="small"
+                        :class="{'model-card':true,'selected':loraModels[getElementIndexByRowAndCol(rowIndex, colIndex)].download_link === taskStore.inference_task.task_args.lora.model && taskStore.inference_task.custom_civitai_id === ''}" hoverable size="small"
                         style="width: 90%; margin:0 auto 16px"
                         @click="selectLoRAModel(rowIndex, colIndex)"
                     >
@@ -193,7 +132,7 @@ const modelTypeDisplayNames = {
                                     {{ loraModels[getElementIndexByRowAndCol(rowIndex, colIndex)].description }}
                                 </div>
                                 <div>
-                                    <a-tag color="cyan">{{ modelTypeDisplayNames[loraModels[getElementIndexByRowAndCol(rowIndex, colIndex)].type] }}</a-tag>
+                                    <a-tag color="cyan">{{ BaseModelTypeDisplayNames[loraModels[getElementIndexByRowAndCol(rowIndex, colIndex)].type] }}</a-tag>
                                 </div>
                             </template>
                         </a-card-meta>
@@ -203,15 +142,14 @@ const modelTypeDisplayNames = {
             <a-row>
                 <a-col :span="24">
                     <a-card
-                        :class="{'custom-lora-model':true,'selected':useCustomLoRAModel}"
-                        @click="selectCustomLoRAModel"
+                        :class="{'custom-lora-model':true,'selected':taskStore.inference_task.custom_civitai_id !== ''}"
                     >
                         <a-typography-title :level="5">Use a LoRA model from CivitAI</a-typography-title>
                         <a-typography-paragraph>
                             Go to <a-typography-link href="https://civitai.com/tag/lora" target="_blank">https://civitai.com</a-typography-link>, find the LoRA model that fits your need, and paste the model download link here.
                         </a-typography-paragraph>
                         <a-input
-                            v-model:value="customLoRAModelLink"
+                            v-model:value="taskStore.inference_task.custom_civitai_id"
                             addon-before="https://civitai.com/api/download/models/"
                             placeholder="123456"
                             style="width: 400px"
@@ -222,11 +160,7 @@ const modelTypeDisplayNames = {
         </div>
         <template #footer>
             <div class="selected-models">
-                <model-tag :closable="true"
-                           :base-model-name="selectedBaseModel"
-                           :lora-model-name="finalSelectedLoraModel"
-                           @model-removed="deselectModel"
-                ></model-tag>
+                <model-tag :closable="true"></model-tag>
             </div>
             <a-button class="model-selector-ok-btn" type="primary" @click="hideModal">OK</a-button>
         </template>
