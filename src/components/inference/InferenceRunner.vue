@@ -2,6 +2,7 @@
 import {CodeOutlined, ClockCircleOutlined, CloseCircleOutlined, CheckCircleOutlined} from "@ant-design/icons-vue";
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from "vue";
 import inferenceAPI from "@/api/v1/inference";
+import networkAPI from "@/api/v1/network";
 import {useTaskStore} from "@/stores/task";
 import {useClientStore} from "@/stores/client";
 import {InferenceTaskStatus} from "@/models/inference_task";
@@ -24,6 +25,7 @@ const manuallyShownModal = ref(false);
 const showModal = async () => {
     manuallyShownModal.value = true;
     modalVisible.value = true
+    await updateNetworkStats();
 }
 
 const hideModal = () => {
@@ -107,6 +109,15 @@ const downloadImages = async () => {
 
 const blockExplorer = config.block_explorer;
 
+
+const networkTotalNodes = ref(0);
+const networkAvailableNodes = ref(0);
+const updateNetworkStats = async () => {
+  const nodeStats = await networkAPI.getNodeStats();
+  networkTotalNodes.value = nodeStats.num_total_nodes;
+  networkAvailableNodes.value = nodeStats.num_available_nodes;
+};
+
 onMounted(async () => {
     await updateTaskStatus();
 });
@@ -129,7 +140,6 @@ onBeforeUnmount(() => {
 
     <a-modal
         :visible="modalVisible"
-        :footer="null"
         title="Task Executing Status"
         @ok="hideModal"
         @cancel="hideModal"
@@ -189,11 +199,11 @@ onBeforeUnmount(() => {
                     </a-timeline-item>
 
                     <a-timeline-item color="gray" v-if="!task.id || latestTaskStatus < InferenceTaskStatus.ParamsUploaded">
-                        Execute the task on the computation nodes
+                        Execute the task on the nodes
                     </a-timeline-item>
                     <a-timeline-item v-if="task.id && latestTaskStatus === InferenceTaskStatus.ParamsUploaded">
                         <template #dot><clock-circle-outlined style="font-size: 16px" /></template>
-                        Executing the task on the computation nodes
+                        The task is executing on the nodes
                     </a-timeline-item>
                     <a-timeline-item color="green" v-if="task.id && latestTaskStatus > InferenceTaskStatus.ParamsUploaded">
                         The task finished executing on the computation nodes
@@ -228,6 +238,7 @@ onBeforeUnmount(() => {
                 </a-timeline>
             </div>
         </a-space>
+      <template #footer>Currently available nodes: {{ networkAvailableNodes + "/" + networkTotalNodes}}</template>
     </a-modal>
 </template>
 
