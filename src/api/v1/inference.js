@@ -6,7 +6,7 @@ class InferenceAPI extends BaseAPI {
     createTask(clientId, taskArgs) {
         return v1.post("/inference_tasks", {
             'client_id': clientId,
-            'task_args': JSON.stringify(taskArgs)
+            'task_args': taskArgs
         });
     }
 
