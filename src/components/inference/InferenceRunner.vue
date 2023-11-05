@@ -42,16 +42,19 @@ const run = async () => {
     isRunning.value = true;
     latestTaskStatus.value = 0;
 
+    const taskArgsJson = await taskStore.taskArgsJson;
+
     try {
         const res = await inferenceAPI.createTask(
             clientStore.client_id,
-            taskStore.taskArgsJson
+            taskArgsJson
         );
     
         taskStore.inference_task.task_id = res.id;
         emit('taskStarted');
 
         modalVisible.value = true;
+        await updateNetworkStats();
         await updateTaskStatus();
     } catch (e) {
         isRunning.value = false;
