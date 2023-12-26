@@ -3,6 +3,11 @@ import jsonBig from "json-bigint";
 import ApiError from "../api-error";
 import config from "@/config.json"
 
+const jsonBigNative = jsonBig({
+    useNativeBigInt: true
+})
+
+
 class V1Client {
     constructor(baseUrl) {
 
@@ -18,13 +23,13 @@ class V1Client {
                         return {};
                     }
 
-                    return jsonBig.parse(data);
+                    return jsonBigNative.parse(data);
                 },
             ],
             transformRequest: [
                 (data, headers) => {
                     headers["Content-Type"] = "application/json";
-                    return jsonBig.stringify(data);
+                    return jsonBigNative.stringify(data);
                 },
             ],
         });

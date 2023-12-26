@@ -288,7 +288,6 @@ const promptTabActiveKey = ref('positive');
         .start-generating
             position absolute
             right 16px
-            top 30px
-
+            top 20px
 
 </style>

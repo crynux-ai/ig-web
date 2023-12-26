@@ -3,6 +3,7 @@ import {CodeOutlined, ClockCircleOutlined, CloseCircleOutlined, CheckCircleOutli
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from "vue";
 import inferenceAPI from "@/api/v1/inference";
 import networkAPI from "@/api/v1/network";
+import applicationAPI from '@/api/v1/applicatioin';
 import {useTaskStore} from "@/stores/task";
 import {useClientStore} from "@/stores/client";
 import {InferenceTaskStatus} from "@/models/inference_task";
@@ -121,8 +122,28 @@ const updateNetworkStats = async () => {
   networkAvailableNodes.value = nodeStats.num_available_nodes;
 };
 
+const appWalletAddress = ref('');
+const appWalletCNXBalance = ref(0);
+
+const toEtherValue = (bigNum) => {
+    if (bigNum === 0) return 0
+
+    const decimals = (bigNum / BigInt(1e18)).toString()
+
+    let fractions = ((bigNum / BigInt(1e16)) % 100n).toString()
+
+    if (fractions.length === 1) fractions += '0'
+
+    return decimals + '.' + fractions
+}
+
 onMounted(async () => {
     await updateTaskStatus();
+
+    const walletBalance = await applicationAPI.getWalletBalance();
+
+    appWalletCNXBalance.value = toEtherValue(walletBalance.cnx);
+    appWalletAddress.value = walletBalance.address;
 });
 
 onBeforeUnmount(() => {
@@ -132,7 +153,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <a-button type="primary" size="large" :loading="isRunning" :disabled="notReadyToRun" @click="run">Generate Image
+    <a-button type="primary" size="large" :loading="isRunning" :disabled="notReadyToRun" @click="run">Generate Image (30 CNX)
     </a-button>
 
     <a-button size="large" class="runner-config" @click="showModal">
@@ -140,6 +161,12 @@ onBeforeUnmount(() => {
             <code-outlined/>
         </template>
     </a-button>
+
+    <div class="wallet-balance">
+        <a :href='blockExplorer + "/address/" + appWalletAddress' target="_blank">
+            Application wallet: {{ appWalletCNXBalance }} CNX
+        </a>
+    </div>
 
     <a-modal
         :visible="modalVisible"
@@ -176,7 +203,7 @@ onBeforeUnmount(() => {
                         Sending the task to the Blockchain
                     </a-timeline-item>
                     <a-timeline-item color="green" v-if="task.id && latestTaskStatus > InferenceTaskStatus.Pending">
-                        The task is sent to the Blockchain&nbsp;&nbsp;<a-typography-link :href='blockExplorer + "/" + task.tx_hash' target="_blank">({{ task.tx_hash.substring(0, 7) + "..." + task.tx_hash.substring(task.tx_hash.length - 5) }})</a-typography-link>
+                        The task is sent to the Blockchain&nbsp;&nbsp;<a-typography-link :href='blockExplorer + "/tx/" + task.tx_hash' target="_blank">({{ task.tx_hash.substring(0, 7) + "..." + task.tx_hash.substring(task.tx_hash.length - 5) }})</a-typography-link>
                     </a-timeline-item>
 
                     <a-timeline-item color="gray" v-if="!task.id || latestTaskStatus < InferenceTaskStatus.TransactionSent">
@@ -251,4 +278,12 @@ onBeforeUnmount(() => {
 
 .task-status
     padding-left 16px
+.wallet-balance
+    text-align right
+    margin-top 6px
+    a
+        color #999
+        text-decoration none
+        &:hover
+            text-decoration underline
 </style>

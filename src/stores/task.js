@@ -47,7 +47,7 @@ export const useTaskStore = defineStore('task', () => {
     })
 
     const clearInferenceTask = () => {
-        inference_task.task_id = "";
+        inference_task.value.task_id = "";
     };
 
     const changeBaseModel = (modelName, modelType) => {
