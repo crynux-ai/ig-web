@@ -5,6 +5,7 @@ import {useTaskStore} from "@/stores/task";
 import InferenceRunner from "@/components/inference/InferenceRunner.vue";
 import ModelSelector from "@/components/inference/ModelSelector.vue";
 import ModelTag from "@/components/inference/ModelTag.vue";
+import {QuestionCircleOutlined} from "@ant-design/icons-vue";
 
 const taskStore = useTaskStore();
 
@@ -88,6 +89,11 @@ const promptTabActiveKey = ref('positive');
                 </a-collapse-panel>
             </a-collapse>
         </div>
+        <a-button size="large" class="contact-btn" href="mailto:hi@crynux.ai">
+            <template #icon>
+                <question-circle-outlined/>
+            </template>
+        </a-button>
         <div class="image-view">
             <a-image-preview-group>
                 <div class="image-wrapper" v-for="num in taskStore.inference_task.task_args.task_config.num_images">
@@ -223,6 +229,11 @@ const promptTabActiveKey = ref('positive');
         top 0
         bottom 0
         overflow-y auto
+
+.contact-btn
+    position absolute
+    left 0
+    bottom 16px
 
 .bottom-bar
     position absolute

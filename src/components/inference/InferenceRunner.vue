@@ -163,9 +163,9 @@ onBeforeUnmount(() => {
     </a-button>
 
     <div class="wallet-balance">
-        <a :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"' target="_blank">
+        <a-typography-link class="balance-link" :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"' target="_blank">
             Application wallet: {{ appWalletCNXBalance }} CNX
-        </a>
+        </a-typography-link>
     </div>
 
     <a-modal
@@ -285,15 +285,15 @@ onBeforeUnmount(() => {
 .wallet-balance
     text-align right
     margin-top 6px
-    a
-        color #999
-        text-decoration none
+    .balance-link
+        color #40a9ff
+        text-decoration underline
         &:hover
-            text-decoration underline
+            color #40a9ff
 .network-stats
-    color #999
-    text-decoration none
+    color #40a9ff
+    text-decoration underline
     &:hover
-        color #999
+        color #40a9ff
         text-decoration underline
 </style>
