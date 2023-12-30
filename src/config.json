@@ -9,5 +9,6 @@
         "standing": 19,
         "others": 3
     },
-    "block_explorer": "https://block-explorer.crynux.ai"
+    "block_explorer": "https://block-explorer.crynux.ai",
+    "network_monitor": "https://netstats.crynux.ai"
 }

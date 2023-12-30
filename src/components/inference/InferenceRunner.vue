@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
     </a-button>
 
     <div class="wallet-balance">
-        <a :href='blockExplorer + "/address/" + appWalletAddress' target="_blank">
+        <a :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"' target="_blank">
             Application wallet: {{ appWalletCNXBalance }} CNX
         </a>
     </div>
@@ -268,7 +268,11 @@ onBeforeUnmount(() => {
                 </a-timeline>
             </div>
         </a-space>
-      <template #footer>Currently available nodes: {{ networkAvailableNodes + "/" + networkTotalNodes}}</template>
+      <template #footer>
+          <a-typography-link class="network-stats" :href="config.network_monitor" target="_blank">
+              Currently available nodes: {{ networkAvailableNodes + "/" + networkTotalNodes}}
+          </a-typography-link>
+      </template>
     </a-modal>
 </template>
 
@@ -286,4 +290,10 @@ onBeforeUnmount(() => {
         text-decoration none
         &:hover
             text-decoration underline
+.network-stats
+    color #999
+    text-decoration none
+    &:hover
+        color #999
+        text-decoration underline
 </style>
