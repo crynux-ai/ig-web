@@ -128,7 +128,7 @@ const promptTabActiveKey = ref('positive');
                     style="height:100%"
                 >
                     <a-tab-pane key="positive" tab="Positive">
-                        <a-textarea v-model:value="taskStore.inference_task.task_args.prompt" placeholder="a lazying man sitting on a brown chair" />
+                        <a-textarea v-model:value="taskStore.inference_task.task_args.prompt" placeholder="a lazy man sitting on a brown chair" />
                     </a-tab-pane>
                     <a-tab-pane key="negative" tab="Negative">
                         <a-textarea v-model:value="taskStore.inference_task.task_args.negative_prompt" placeholder="lowres, bad anatomy, bad hands, missing fingers, worst quality, ..." />
