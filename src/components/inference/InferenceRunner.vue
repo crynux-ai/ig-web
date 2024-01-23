@@ -48,7 +48,8 @@ const run = async () => {
     try {
         const res = await inferenceAPI.createTask(
             clientStore.client_id,
-            taskArgsJson
+            taskArgsJson,
+            0
         );
     
         taskStore.inference_task.task_id = res.id;
