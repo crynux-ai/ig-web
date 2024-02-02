@@ -3,11 +3,16 @@ import v1 from "./v1";
 
 class InferenceAPI extends BaseAPI {
 
-    createTask(clientId, taskArgs) {
-        return v1.post("/inference_tasks", {
+    createTask(clientId, taskArgs, taskType, vramLimit = undefined) {
+        const args = {
             'client_id': clientId,
-            'task_args': taskArgs
-        });
+            'task_args': taskArgs,
+            'task_type': taskType,
+        }
+        if (vramLimit) {
+            args["vram_limit"] = vramLimit
+        }
+        return v1.post("/inference_tasks", args);
     }
 
     getTaskStatus(clientId, taskId) {

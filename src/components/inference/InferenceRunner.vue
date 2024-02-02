@@ -1,14 +1,15 @@
 <script setup>
-import {CodeOutlined, ClockCircleOutlined, CloseCircleOutlined, CheckCircleOutlined} from "@ant-design/icons-vue";
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from "vue";
+import { CodeOutlined, ClockCircleOutlined, CloseCircleOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import inferenceAPI from "@/api/v1/inference";
 import networkAPI from "@/api/v1/network";
 import applicationAPI from '@/api/v1/applicatioin';
-import {useTaskStore} from "@/stores/task";
-import {useClientStore} from "@/stores/client";
-import {InferenceTaskStatus} from "@/models/inference_task";
+import { useTaskStore } from "@/stores/task";
+import { useClientStore } from "@/stores/client";
+import { InferenceTaskStatus } from "@/models/inference_task";
 import config from "@/config.json";
-import {message} from "ant-design-vue";
+import { message } from "ant-design-vue";
+import { BaseModelType } from "@/models/base_model";
 
 const emit = defineEmits(["image", "taskStarted"]);
 const taskStore = useTaskStore();
@@ -44,13 +45,23 @@ const run = async () => {
     latestTaskStatus.value = 0;
 
     const taskArgsJson = await taskStore.taskArgsJson;
+    const modelType = taskStore.inference_task.base_model_type;
+
+    let vramLimit = undefined;
+    if (modelType === BaseModelType.SD15) {
+        vramLimit = 8;
+    } else if (modelType === BaseModelType.SD21 || modelType === BaseModelType.SDXL) {
+        vramLimit = 10;
+    }
 
     try {
         const res = await inferenceAPI.createTask(
             clientStore.client_id,
-            taskArgsJson
+            taskArgsJson,
+            0,
+            vramLimit,
         );
-    
+
         taskStore.inference_task.task_id = res.id;
         emit('taskStarted');
 
@@ -89,7 +100,7 @@ const fetchTaskStatus = async () => {
         traceTaskRunningStatusInterval = null;
         isRunning.value = false;
 
-        if(task.status === InferenceTaskStatus.Success) {
+        if (task.status === InferenceTaskStatus.Success) {
             await downloadImages();
 
             if (!manuallyShownModal.value) {
@@ -117,9 +128,9 @@ const blockExplorer = config.block_explorer;
 const networkTotalNodes = ref(0);
 const networkAvailableNodes = ref(0);
 const updateNetworkStats = async () => {
-  const nodeStats = await networkAPI.getNodeStats();
-  networkTotalNodes.value = nodeStats.num_total_nodes;
-  networkAvailableNodes.value = nodeStats.num_available_nodes;
+    const nodeStats = await networkAPI.getNodeStats();
+    networkTotalNodes.value = nodeStats.num_total_nodes;
+    networkAvailableNodes.value = nodeStats.num_available_nodes;
 };
 
 const appWalletAddress = ref('');
@@ -153,45 +164,32 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <a-button type="primary" size="large" :loading="isRunning" :disabled="notReadyToRun" @click="run">Generate Image (30 CNX)
+    <a-button type="primary" size="large" :loading="isRunning" :disabled="notReadyToRun" @click="run">Generate Image (30
+        CNX)
     </a-button>
 
     <a-button size="large" class="runner-config" @click="showModal">
         <template #icon>
-            <code-outlined/>
+            <code-outlined />
         </template>
     </a-button>
 
     <div class="wallet-balance">
-        <a-typography-link class="balance-link" :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"' target="_blank">
+        <a-typography-link class="balance-link" :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"'
+            target="_blank">
             Application wallet: {{ appWalletCNXBalance }} CNX
         </a-typography-link>
     </div>
 
-    <a-modal
-        :visible="modalVisible"
-        title="Task Executing Status"
-        @ok="hideModal"
-        @cancel="hideModal"
-        width="800px"
-        :destroy-on-close="true"
-        :mask-closable="false"
-    >
+    <a-modal :visible="modalVisible" title="Task Executing Status" @ok="hideModal" @cancel="hideModal" width="800px"
+        :destroy-on-close="true" :mask-closable="false">
         <a-space direction="vertical" style="width: 100%" :size="40">
-            <a-alert
-                v-if="isRunning"
-                :message="'The task is running on the Crynux Network'"
-                type="success"
-            />
-            <a-alert
-                v-if="!isRunning && !task.id" message="Task will be running on the Crynux Network" type="info"
-            />
-            <a-alert
-                v-if="!isRunning && task.id && task.status === InferenceTaskStatus.Success" message="The task has finished successfully" type="success"
-            />
-            <a-alert
-                v-if="!isRunning && task.id && task.status === InferenceTaskStatus.Aborted" message="The task has been aborted" type="error"
-            />
+            <a-alert v-if="isRunning" :message="'The task is running on the Crynux Network'" type="success" />
+            <a-alert v-if="!isRunning && !task.id" message="Task will be running on the Crynux Network" type="info" />
+            <a-alert v-if="!isRunning && task.id && task.status === InferenceTaskStatus.Success"
+                message="The task has finished successfully" type="success" />
+            <a-alert v-if="!isRunning && task.id && task.status === InferenceTaskStatus.Aborted"
+                message="The task has been aborted" type="error" />
 
             <div class="task-status">
                 <a-timeline>
@@ -203,7 +201,9 @@ onBeforeUnmount(() => {
                         Sending the task to the Blockchain
                     </a-timeline-item>
                     <a-timeline-item color="green" v-if="task.id && latestTaskStatus > InferenceTaskStatus.Pending">
-                        The task is sent to the Blockchain&nbsp;&nbsp;<a-typography-link :href='blockExplorer + "/tx/" + task.tx_hash' target="_blank">({{ task.tx_hash.substring(0, 7) + "..." + task.tx_hash.substring(task.tx_hash.length - 5) }})</a-typography-link>
+                        The task is sent to the Blockchain&nbsp;&nbsp;<a-typography-link
+                            :href='blockExplorer + "/tx/" + task.tx_hash' target="_blank">({{ task.tx_hash.substring(0, 7) +
+                                "..." + task.tx_hash.substring(task.tx_hash.length - 5) }})</a-typography-link>
                     </a-timeline-item>
 
                     <a-timeline-item color="gray" v-if="!task.id || latestTaskStatus < InferenceTaskStatus.TransactionSent">
@@ -213,18 +213,21 @@ onBeforeUnmount(() => {
                         <template #dot><clock-circle-outlined style="font-size: 16px" /></template>
                         Waiting for the Blockchain confirmation
                     </a-timeline-item>
-                    <a-timeline-item color="green" v-if="task.id && latestTaskStatus >= InferenceTaskStatus.BlockchainConfirmed">
+                    <a-timeline-item color="green"
+                        v-if="task.id && latestTaskStatus >= InferenceTaskStatus.BlockchainConfirmed">
                         The task is confirmed on the Blockchain
                     </a-timeline-item>
 
-                    <a-timeline-item color="gray" v-if="!task.id || latestTaskStatus < InferenceTaskStatus.BlockchainConfirmed">
+                    <a-timeline-item color="gray"
+                        v-if="!task.id || latestTaskStatus < InferenceTaskStatus.BlockchainConfirmed">
                         Send the task to the relay
                     </a-timeline-item>
                     <a-timeline-item v-if="task.id && latestTaskStatus === InferenceTaskStatus.BlockchainConfirmed">
                         <template #dot><clock-circle-outlined style="font-size: 16px" /></template>
                         Sending the task to the relay
                     </a-timeline-item>
-                    <a-timeline-item color="green" v-if="task.id && latestTaskStatus > InferenceTaskStatus.BlockchainConfirmed">
+                    <a-timeline-item color="green"
+                        v-if="task.id && latestTaskStatus > InferenceTaskStatus.BlockchainConfirmed">
                         The task is sent to the relay
                     </a-timeline-item>
 
@@ -268,11 +271,11 @@ onBeforeUnmount(() => {
                 </a-timeline>
             </div>
         </a-space>
-      <template #footer>
-          <a-typography-link class="network-stats" :href="config.network_monitor" target="_blank">
-              Currently available nodes: {{ networkAvailableNodes + "/" + networkTotalNodes}}
-          </a-typography-link>
-      </template>
+        <template #footer>
+            <a-typography-link class="network-stats" :href="config.network_monitor" target="_blank">
+                Currently available nodes: {{ networkAvailableNodes + "/" + networkTotalNodes }}
+            </a-typography-link>
+        </template>
     </a-modal>
 </template>
 
