@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
     </a-button>
 
     <div class="wallet-balance">
-        <a-typography-link class="balance-link" :href='blockExplorer + "/address/" + appWalletAddress + "/tokens"'
+        <a-typography-link class="balance-link" :href='blockExplorer + "/address/" + appWalletAddress'
             target="_blank">
             Application wallet: {{ appWalletCNXBalance }} CNX
         </a-typography-link>

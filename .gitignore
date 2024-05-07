@@ -30,3 +30,6 @@ coverage
 *.sw?
 *.iml
 .yarn
+
+*.zip
+
