@@ -153,7 +153,7 @@ onMounted(async () => {
 
     const walletBalance = await applicationAPI.getWalletBalance();
 
-    appWalletCNXBalance.value = toEtherValue(walletBalance.cnx);
+    appWalletCNXBalance.value = toEtherValue(walletBalance.balance);
     appWalletAddress.value = walletBalance.address;
 });
 
