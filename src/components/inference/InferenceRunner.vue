@@ -44,6 +44,8 @@ const run = async () => {
     isRunning.value = true;
     latestTaskStatus.value = 0;
 
+    taskStore.inference_task.task_args.task_config.seed = Math.round(Math.random() * 100000000)
+
     const taskArgsJson = await taskStore.taskArgsJson;
     const modelType = taskStore.inference_task.base_model_type;
 

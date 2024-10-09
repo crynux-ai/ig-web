@@ -95,8 +95,6 @@ export const useTaskStore = defineStore('task', () => {
             taskArgs.controlnet = null;
         }
 
-        taskArgs.task_config.seed = Math.round(Math.random() * 100000000)
-
         const taskArgsJsonStr = JSON.stringify(taskArgs);
 
         console.log(taskArgsJsonStr);
