@@ -130,9 +130,13 @@ const blockExplorer = config.block_explorer;
 const networkTotalNodes = ref(0);
 const networkAvailableNodes = ref(0);
 const updateNetworkStats = async () => {
-    const nodeStats = await networkAPI.getNodeStats();
-    networkTotalNodes.value = nodeStats.num_total_nodes;
-    networkAvailableNodes.value = nodeStats.num_available_nodes;
+    try {
+        const nodeStats = await networkAPI.getNodeStats();
+        networkTotalNodes.value = nodeStats.num_total_nodes;
+        networkAvailableNodes.value = nodeStats.num_available_nodes;
+    } catch (e) {
+        console.log(e);
+    }
 };
 
 const appWalletAddress = ref('');
