@@ -38,7 +38,7 @@ export const useTaskStore = defineStore('task', () => {
                 image_width: 512,
                 image_height: 512,
                 steps: 40,
-                num_images: 6,
+                num_images: 1,
                 seed: 0,
                 safety_checker: false,
                 cfg: 5,
