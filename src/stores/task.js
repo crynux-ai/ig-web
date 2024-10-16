@@ -59,6 +59,11 @@ export const useTaskStore = defineStore('task', () => {
                 // LoRA model must be reset
                 inference_task.value.task_args.lora.model = '';
                 inference_task.value.custom_civitai_id = '';
+
+                if (inference_task.value.base_model_type === BaseModelType.SDXL_TURBO) {
+                    inference_task.value.task_args.task_config.steps = 1;
+                    inference_task.value.task_args.task_config.cfg = 0;
+                }
             }
     };
 
@@ -93,6 +98,19 @@ export const useTaskStore = defineStore('task', () => {
             taskArgs.controlnet.model = controlnetModels[inference_task.value.base_model_type];
         } else {
             taskArgs.controlnet = null;
+        }
+        // sdxl-turbo specified task args
+        if (taskArgs.base_model.includes("sdxl-turbo")) {
+            taskArgs.task_config.cfg = 0;
+            if (taskArgs.task_config.steps > 4) {
+                taskArgs.task_config.steps = 4;
+            }
+            taskArgs.scheduler = {
+                method: "EulerAncestralDiscreteScheduler",
+                args: {
+                    timestep_spacing: "trailing"
+                }
+            }
         }
 
         const taskArgsJsonStr = JSON.stringify(taskArgs);
