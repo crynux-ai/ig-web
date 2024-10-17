@@ -8,8 +8,8 @@ controlnetModels[BaseModelType.SD15] = 'lllyasviel/control_v11p_sd15_openpose';
 controlnetModels[BaseModelType.SDXL] = 'thibaud/controlnet-openpose-sdxl-1.0'
 
 const defaultBaseModel = {
-    name: 'runwayml/stable-diffusion-v1-5',
-    type: BaseModelType.SD15
+    name: 'crynux-ai/sdxl-turbo',
+    type: BaseModelType.SDXL_TURBO
 };
 
 export const useTaskStore = defineStore('task', () => {
@@ -37,11 +37,11 @@ export const useTaskStore = defineStore('task', () => {
             task_config: {
                 image_width: 512,
                 image_height: 512,
-                steps: 40,
+                steps: 1,
                 num_images: 1,
                 seed: 0,
                 safety_checker: false,
-                cfg: 5,
+                cfg: 0,
             }
         }
     })
@@ -63,6 +63,9 @@ export const useTaskStore = defineStore('task', () => {
                 if (inference_task.value.base_model_type === BaseModelType.SDXL_TURBO) {
                     inference_task.value.task_args.task_config.steps = 1;
                     inference_task.value.task_args.task_config.cfg = 0;
+                } else if (inference_task.value.base_model_type === BaseModelType.SD15) {
+                    inference_task.value.task_args.task_config.steps = 40;
+                    inference_task.value.task_args.task_config.cfg = 5;
                 }
             }
     };
