@@ -52,8 +52,8 @@ const run = async () => {
     let vramLimit = undefined;
     if (modelType === BaseModelType.SD15) {
         vramLimit = 8;
-    } else if (modelType === BaseModelType.SD21 || modelType === BaseModelType.SDXL) {
-        vramLimit = 10;
+    } else if (modelType === BaseModelType.SD21 || modelType === BaseModelType.SDXL || modelType == BaseModelType.SDXL_TURBO) {
+        vramLimit = 14;
     }
 
     try {

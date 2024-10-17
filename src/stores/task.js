@@ -8,8 +8,8 @@ controlnetModels[BaseModelType.SD15] = 'lllyasviel/control_v11p_sd15_openpose';
 controlnetModels[BaseModelType.SDXL] = 'thibaud/controlnet-openpose-sdxl-1.0'
 
 const defaultBaseModel = {
-    name: 'runwayml/stable-diffusion-v1-5',
-    type: BaseModelType.SD15
+    name: 'crynux-ai/sdxl-turbo',
+    type: BaseModelType.SDXL_TURBO
 };
 
 export const useTaskStore = defineStore('task', () => {
@@ -37,11 +37,11 @@ export const useTaskStore = defineStore('task', () => {
             task_config: {
                 image_width: 512,
                 image_height: 512,
-                steps: 40,
+                steps: 1,
                 num_images: 1,
                 seed: 0,
                 safety_checker: false,
-                cfg: 5,
+                cfg: 0,
             }
         }
     })
@@ -59,6 +59,14 @@ export const useTaskStore = defineStore('task', () => {
                 // LoRA model must be reset
                 inference_task.value.task_args.lora.model = '';
                 inference_task.value.custom_civitai_id = '';
+
+                if (inference_task.value.base_model_type === BaseModelType.SDXL_TURBO) {
+                    inference_task.value.task_args.task_config.steps = 1;
+                    inference_task.value.task_args.task_config.cfg = 0;
+                } else if (inference_task.value.base_model_type === BaseModelType.SD15) {
+                    inference_task.value.task_args.task_config.steps = 40;
+                    inference_task.value.task_args.task_config.cfg = 5;
+                }
             }
     };
 
@@ -93,6 +101,19 @@ export const useTaskStore = defineStore('task', () => {
             taskArgs.controlnet.model = controlnetModels[inference_task.value.base_model_type];
         } else {
             taskArgs.controlnet = null;
+        }
+        // sdxl-turbo specified task args
+        if (taskArgs.base_model.includes("sdxl-turbo")) {
+            taskArgs.task_config.cfg = 0;
+            if (taskArgs.task_config.steps > 4) {
+                taskArgs.task_config.steps = 4;
+            }
+            taskArgs.scheduler = {
+                method: "EulerAncestralDiscreteScheduler",
+                args: {
+                    timestep_spacing: "trailing"
+                }
+            }
         }
 
         const taskArgsJsonStr = JSON.stringify(taskArgs);

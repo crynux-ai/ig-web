@@ -56,7 +56,7 @@ const promptTabActiveKey = ref('positive');
                     <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.image_height" placeholder="Image height" min="256" max="1024" />
                 </a-form-item>
                 <a-form-item label="Steps" name="steps">
-                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.steps" placeholder="Steps" min="20" max="100" />
+                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.steps" placeholder="Steps" min="1" max="100" />
                 </a-form-item>
                 <a-form-item label="Lora weight" name="weight">
                     <a-input-number v-model:value.number="taskStore.inference_task.task_args.lora.weight" placeholder="Weight" min="0.1" max="1" :disabled="taskStore.inference_task.task_args.lora.model==='' && taskStore.inference_task.custom_civitai_id===''" />
@@ -68,7 +68,7 @@ const promptTabActiveKey = ref('positive');
                     <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.num_images" placeholder="Num images" min="1" max="9" />
                 </a-form-item>
                 <a-form-item label="CFG" name="cfg">
-                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.cfg" placeholder="CFG" min="1" max="15" />
+                    <a-input-number v-model:value.number="taskStore.inference_task.task_args.task_config.cfg" placeholder="CFG" min="0" max="15" />
                 </a-form-item>
             </a-form>
         </a-card>
